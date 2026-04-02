@@ -1,0 +1,18 @@
+{
+  "name": "@pikudalexa/skill",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@pikudalexa/shared": "*",
+    "ask-sdk-core": "^2.14.0",
+    "ask-sdk-model": "^1.86.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/uuid": "^9.0.0"
+  }
+}
