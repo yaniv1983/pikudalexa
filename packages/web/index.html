@@ -330,6 +330,27 @@
       </div>
     </div>
 
+    <!-- Alert Messages -->
+    <div class="card">
+      <h2>Alert Messages</h2>
+      <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.75rem;">
+        Customize what Alexa says for each alert type. Use <code style="color: var(--blue);">{city}</code> for city name
+        and <code style="color: var(--blue);">{countdown}</code> for seconds to shelter.
+      </p>
+      <div class="input-group">
+        <label>Early Warning (~10 min before impact)</label>
+        <textarea id="msgEarlyWarning" rows="2" style="width:100%;padding:0.625rem 0.75rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.9rem;resize:vertical;font-family:inherit;">Early warning! Missile launches detected toward Israel. You may have about 10 minutes. Prepare to move to shelter.</textarea>
+      </div>
+      <div class="input-group">
+        <label>Rocket / Missile Alert</label>
+        <textarea id="msgRocketAlert" rows="2" style="width:100%;padding:0.625rem 0.75rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.9rem;resize:vertical;font-family:inherit;">Red alert! Rockets in {city}. You have {countdown} seconds to reach shelter. Go now!</textarea>
+      </div>
+      <div class="input-group">
+        <label>All Clear</label>
+        <textarea id="msgAllClear" rows="2" style="width:100%;padding:0.625rem 0.75rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.9rem;resize:vertical;font-family:inherit;">All clear. The alert in your area has ended. You may leave the shelter.</textarea>
+      </div>
+    </div>
+
     <!-- Voice Monkey -->
     <div class="card">
       <h2>Voice Monkey (Optional)</h2>
@@ -350,9 +371,13 @@
     <!-- Test & Save -->
     <div class="card">
       <h2>Test & Save</h2>
+      <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.75rem;">
+        Settings are saved locally in your browser. The test button previews the alert message
+        — it does not send to Alexa devices (Doorbell integration required for that).
+      </p>
       <div class="btn-group">
         <button class="btn btn-primary" id="saveBtn">Save Settings</button>
-        <button class="btn btn-danger" id="testBtn">Send Test Alert</button>
+        <button class="btn btn-danger" id="testBtn">Preview Test Alert</button>
       </div>
       <div class="test-result" id="testResult"></div>
     </div>

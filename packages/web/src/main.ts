@@ -18,6 +18,11 @@ interface Settings {
   enableSystemMessages: boolean;
   voiceMonkeyToken: string;
   voiceMonkeyDevice: string;
+  messages: {
+    earlyWarning: string;
+    rocketAlert: string;
+    allClear: string;
+  };
 }
 
 // State
@@ -34,10 +39,17 @@ const saveBtn = document.getElementById('saveBtn') as HTMLButtonElement;
 const testBtn = document.getElementById('testBtn') as HTMLButtonElement;
 const testResult = document.getElementById('testResult') as HTMLDivElement;
 
-// Load cities data
+// Load cities data - try API first, fall back to bundled file
 async function loadCities(): Promise<void> {
   try {
-    const versionsRes = await fetch('https://api.tzevaadom.co.il/lists-versions');
+    // Try the TzevaAdom API first
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+
+    const versionsRes = await fetch('https://api.tzevaadom.co.il/lists-versions', {
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
     const versions = await versionsRes.json();
 
     const citiesRes = await fetch(
@@ -45,14 +57,23 @@ async function loadCities(): Promise<void> {
     );
     const data = await citiesRes.json();
     allCities = data.cities;
-
-    statusDot.classList.add('online');
-    statusText.textContent = `Connected. ${Object.keys(allCities).length} cities loaded.`;
-  } catch (err) {
-    statusDot.classList.add('offline');
-    statusText.textContent = 'Failed to load cities data. Check your connection.';
-    console.error('Failed to load cities:', err);
+  } catch {
+    // Fall back to bundled cities.json
+    console.log('API fetch failed, using bundled cities data');
+    try {
+      const res = await fetch('./cities.json');
+      const data = await res.json();
+      allCities = data.cities;
+    } catch (err2) {
+      statusDot.classList.add('offline');
+      statusText.textContent = 'Failed to load cities data.';
+      console.error('Failed to load cities:', err2);
+      return;
+    }
   }
+
+  statusDot.classList.add('online');
+  statusText.textContent = `Ready. ${Object.keys(allCities).length} cities loaded.`;
 }
 
 // City search
@@ -152,6 +173,11 @@ function getSettings(): Settings {
     enableSystemMessages: getChecked('systemMessages'),
     voiceMonkeyToken: (document.getElementById('vmToken') as HTMLInputElement).value.trim(),
     voiceMonkeyDevice: (document.getElementById('vmDevice') as HTMLInputElement).value.trim(),
+    messages: {
+      earlyWarning: (document.getElementById('msgEarlyWarning') as HTMLTextAreaElement).value,
+      rocketAlert: (document.getElementById('msgRocketAlert') as HTMLTextAreaElement).value,
+      allClear: (document.getElementById('msgAllClear') as HTMLTextAreaElement).value,
+    },
   };
 }
 
@@ -175,39 +201,26 @@ saveBtn.addEventListener('click', () => {
   console.log('Settings saved:', settings);
 });
 
-// Test alert
-testBtn.addEventListener('click', async () => {
-  testBtn.disabled = true;
-  testBtn.textContent = 'Sending...';
-
-  try {
-    // TODO: Call the test alert API endpoint
-    // For now, simulate a delay and show the message
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    const settings = getSettings();
-    if (settings.cities.length === 0) {
-      showResult('error', 'Select a city first, then test.');
-    } else {
-      const cityNames = settings.cities
-        .map((id) => {
-          const city = Object.values(allCities).find((c) => c.id === id);
-          return city ? city.en : `ID ${id}`;
-        })
-        .join(', ');
-
-      showResult(
-        'success',
-        `Test alert would be sent for: ${cityNames}. ` +
-        `Connect your Alexa skill to receive the actual test notification.`,
-      );
-    }
-  } catch (err) {
-    showResult('error', 'Failed to send test alert. Check your connection.');
-  } finally {
-    testBtn.disabled = false;
-    testBtn.textContent = 'Send Test Alert';
+// Test alert - preview the customized messages
+testBtn.addEventListener('click', () => {
+  const settings = getSettings();
+  if (settings.cities.length === 0) {
+    showResult('error', 'Select a city first, then test.');
+    return;
   }
+
+  const firstCity = Object.values(allCities).find((c) => c.id === settings.cities[0]);
+  const cityName = firstCity ? firstCity.en : 'your city';
+  const countdown = firstCity ? String(firstCity.countdown) : '90';
+
+  const rocketMsg = settings.messages.rocketAlert
+    .replace(/\{city\}/g, cityName)
+    .replace(/\{countdown\}/g, countdown);
+
+  showResult(
+    'success',
+    `Alexa would say: "${rocketMsg}"`,
+  );
 });
 
 function showResult(type: 'success' | 'error', message: string): void {
@@ -241,6 +254,14 @@ function loadSavedSettings(): void {
       settings.voiceMonkeyToken || '';
     (document.getElementById('vmDevice') as HTMLInputElement).value =
       settings.voiceMonkeyDevice || '';
+    if (settings.messages) {
+      (document.getElementById('msgEarlyWarning') as HTMLTextAreaElement).value =
+        settings.messages.earlyWarning || '';
+      (document.getElementById('msgRocketAlert') as HTMLTextAreaElement).value =
+        settings.messages.rocketAlert || '';
+      (document.getElementById('msgAllClear') as HTMLTextAreaElement).value =
+        settings.messages.allClear || '';
+    }
   } catch {
     // Ignore corrupted settings
   }
