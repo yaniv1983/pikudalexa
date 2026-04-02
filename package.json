@@ -1,14 +1,22 @@
 {
   "name": "pikudalexa",
-  "version": "1.0.0",
-  "main": "index.js",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Open-source Alexa skill for real-time Pikud HaOref alerts",
+  "license": "MIT",
+  "author": "Yaniv Morozovsky",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "npm run build --workspaces",
+    "test:ws": "node test-websocket.js",
+    "test:cities": "node test-cities.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "devDependencies": {
+    "@types/node": "^20.19.37",
+    "typescript": "^5.9.3"
+  },
   "dependencies": {
     "ws": "^8.20.0"
   }
