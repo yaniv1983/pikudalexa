@@ -19,26 +19,18 @@
             "tzeva adom"
           ],
           "name": "Pikud Alert",
-          "description": "Get real-time Pikud HaOref (Israel Home Front Command) alerts on your Alexa devices. Supports rocket/missile alerts, early warnings, hostile aircraft intrusions, and all-clear notifications. Receive immediate doorbell chime and spoken announcements when alerts are detected in your configured cities."
+          "description": "Get real-time Pikud HaOref (Israel Home Front Command) alerts on your Alexa devices. Supports rocket/missile alerts, early warnings, hostile aircraft intrusions, and all-clear notifications."
         }
       },
       "isAvailableWorldwide": true,
-      "testingInstructions": "Enable the skill, link your Amazon account, and configure your city via the companion web panel. The skill monitors real-time alerts from Pikud HaOref via the TzevaAdom service.",
-      "category": "SAFETY",
-      "distributionCountries": []
+      "testingInstructions": "Enable the skill and say Alexa open Pikud Alert.",
+      "category": "NEWS"
     },
     "apis": {
       "custom": {
         "endpoint": {
-          "uri": "arn:aws:lambda:us-east-1:XXXXXXXXXXXX:function:pikudalexa-skill"
-        },
-        "interfaces": []
-      },
-      "smartHome": {
-        "endpoint": {
-          "uri": "arn:aws:lambda:us-east-1:XXXXXXXXXXXX:function:pikudalexa-skill"
-        },
-        "protocolVersion": "3"
+          "uri": "arn:aws:lambda:us-east-1:564751240886:function:ask-pikudalert-default-default-1775161485431"
+        }
       }
     },
     "manifestVersion": "1.0",
@@ -47,39 +39,7 @@
       "isExportCompliant": true,
       "containsAds": false,
       "isChildDirected": false,
-      "usesPersonalInfo": false,
-      "locales": {
-        "en-US": {
-          "privacyPolicyUrl": "",
-          "termsOfUseUrl": ""
-        }
-      }
-    },
-    "permissions": [
-      {
-        "name": "alexa::devices:all:notifications:write"
-      }
-    ],
-    "events": {
-      "publications": [
-        {
-          "eventName": "AMAZON.MessageAlert.Activated"
-        }
-      ],
-      "endpoint": {
-        "uri": "arn:aws:lambda:us-east-1:XXXXXXXXXXXX:function:pikudalexa-skill"
-      },
-      "subscriptions": [
-        {
-          "eventName": "SKILL_PROACTIVE_SUBSCRIPTION_CHANGED"
-        },
-        {
-          "eventName": "SKILL_ENABLED"
-        },
-        {
-          "eventName": "SKILL_DISABLED"
-        }
-      ]
+      "usesPersonalInfo": false
     }
   }
 }
