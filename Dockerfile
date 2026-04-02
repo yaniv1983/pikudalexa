@@ -1,11 +1,13 @@
 FROM node:20-slim AS builder
 
 WORKDIR /app
-COPY package.json package-lock.json ./
+
+# Install only shared + monitor dependencies
 COPY packages/shared/package.json packages/shared/
 COPY packages/monitor/package.json packages/monitor/
 
-RUN npm ci --ignore-scripts
+RUN cd packages/shared && npm install && \
+    cd ../monitor && npm install
 
 COPY tsconfig.base.json ./
 COPY packages/shared/ packages/shared/
@@ -21,8 +23,8 @@ COPY --from=builder /app/packages/shared/dist packages/shared/dist
 COPY --from=builder /app/packages/shared/package.json packages/shared/
 COPY --from=builder /app/packages/monitor/dist packages/monitor/dist
 COPY --from=builder /app/packages/monitor/package.json packages/monitor/
-COPY --from=builder /app/node_modules node_modules
-COPY --from=builder /app/package.json ./
+COPY --from=builder /app/packages/monitor/node_modules packages/monitor/node_modules
+COPY --from=builder /app/packages/shared/node_modules packages/shared/node_modules
 
 USER node
 CMD ["node", "packages/monitor/dist/index.js"]
