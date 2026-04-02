@@ -4,6 +4,7 @@ import { TzevaAdomClient } from './websocket-client';
 import { CitiesCache } from './cities-cache';
 import { AlertProcessor } from './alert-processor';
 import { AlertDispatcher } from './alert-dispatcher';
+import { startTokenServer, loadTokens } from './token-server';
 
 async function main() {
   console.log('=== PikudAlexa Monitor ===');
@@ -21,7 +22,11 @@ async function main() {
     alexaClientSecret: process.env.ALEXA_CLIENT_SECRET,
   });
 
-  // TODO: Load from DynamoDB. For now, support a single user via env vars.
+  // Start token receiver server (Lambda posts tokens here after AcceptGrant)
+  const tokenPort = Number(process.env.TOKEN_PORT) || 9876;
+  startTokenServer(tokenPort);
+
+  // Load user config
   const users = loadUsersFromEnv();
   console.log(`Monitoring for ${users.length} user(s)\n`);
 
@@ -44,6 +49,9 @@ async function main() {
       console.log('[Monitor] Duplicate or irrelevant, skipping');
       return;
     }
+
+    // Refresh tokens from file before dispatch (Lambda may have updated them)
+    refreshUserTokens(users);
 
     // Find matching users
     const matchingUsers = users.filter((u) => processor.isRelevantToUser(alert, u));
@@ -72,16 +80,24 @@ async function main() {
   process.on('SIGTERM', shutdown);
 }
 
-/**
- * Load a single user from environment variables for simple local testing.
- * In production, users are loaded from DynamoDB.
- */
+/** Refresh user tokens from the tokens file (written by Lambda via token server) */
+function refreshUserTokens(users: UserPreferences[]): void {
+  const tokens = loadTokens();
+  if (tokens && users.length > 0) {
+    users[0].alexaAccessToken = tokens.accessToken;
+    users[0].alexaRefreshToken = tokens.refreshToken;
+  }
+}
+
 function loadUsersFromEnv(): UserPreferences[] {
   const cityIds = process.env.MONITOR_CITY_IDS;
   if (!cityIds) {
     console.warn('[Config] No MONITOR_CITY_IDS set. Monitor will log all alerts but not dispatch.');
     return [];
   }
+
+  // Try loading existing tokens
+  const tokens = loadTokens();
 
   const user: UserPreferences = {
     userId: 'local-user',
@@ -92,8 +108,8 @@ function loadUsersFromEnv(): UserPreferences[] {
     enabledThreats: [0, 2, 5, 7],
     enableDrills: process.env.MONITOR_ENABLE_DRILLS === 'true',
     enableSystemMessages: true,
-    alexaAccessToken: process.env.ALEXA_ACCESS_TOKEN,
-    alexaRefreshToken: process.env.ALEXA_REFRESH_TOKEN,
+    alexaAccessToken: tokens?.accessToken || process.env.ALEXA_ACCESS_TOKEN,
+    alexaRefreshToken: tokens?.refreshToken || process.env.ALEXA_REFRESH_TOKEN,
     voiceMonkeyToken: process.env.VOICE_MONKEY_TOKEN,
     voiceMonkeyDevice: process.env.VOICE_MONKEY_DEVICE,
     createdAt: new Date().toISOString(),

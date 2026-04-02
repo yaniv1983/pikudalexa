@@ -75,10 +75,31 @@ export async function handleAcceptGrant(
       expires_in: number;
     };
 
-    // TODO: Store tokens in DynamoDB keyed by user ID
-    // For now, log them (will be replaced with DynamoDB storage)
     console.log('AcceptGrant: Tokens received successfully');
     console.log('Access token expires in:', tokens.expires_in, 'seconds');
+
+    // Forward tokens to the monitor's token server
+    const monitorUrl = process.env.MONITOR_TOKEN_URL;
+    if (monitorUrl) {
+      try {
+        const fwdRes = await fetch(monitorUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.TOKEN_SECRET || ''}`,
+          },
+          body: JSON.stringify(tokens),
+        });
+        console.log('Forwarded tokens to monitor:', fwdRes.status);
+      } catch (fwdErr) {
+        console.error('Failed to forward tokens to monitor:', fwdErr);
+        // Don't fail AcceptGrant - tokens are logged, can be manually set
+      }
+    } else {
+      console.log('MONITOR_TOKEN_URL not set - tokens not forwarded');
+      console.log('Access token:', tokens.access_token.substring(0, 20) + '...');
+      console.log('Refresh token:', tokens.refresh_token.substring(0, 20) + '...');
+    }
 
     return {
       event: {
