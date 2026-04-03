@@ -5,6 +5,7 @@ import { CitiesCache } from './cities-cache';
 import { AlertProcessor } from './alert-processor';
 import { AlertDispatcher } from './alert-dispatcher';
 import { startTokenServer, loadTokens } from './token-server';
+import { startTokenRefresh, stopTokenRefresh } from './token-refresh';
 
 async function main() {
   console.log('=== PikudAlexa Monitor ===');
@@ -25,6 +26,11 @@ async function main() {
   // Start token receiver server (Lambda posts tokens here after AcceptGrant)
   const tokenPort = Number(process.env.TOKEN_PORT) || 9876;
   startTokenServer(tokenPort);
+
+  // Start automatic token refresh (refreshes before expiry)
+  if (process.env.ALEXA_CLIENT_ID && process.env.ALEXA_CLIENT_SECRET) {
+    startTokenRefresh(process.env.ALEXA_CLIENT_ID, process.env.ALEXA_CLIENT_SECRET);
+  }
 
   // Load user config
   const users = loadUsersFromEnv();
@@ -74,6 +80,7 @@ async function main() {
   const shutdown = () => {
     console.log('\n[Monitor] Shutting down...');
     client.stop();
+    stopTokenRefresh();
     process.exit(0);
   };
   process.on('SIGINT', shutdown);
