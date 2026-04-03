@@ -1,0 +1,14 @@
+[Unit]
+Description=PikudAlexa Alert Monitor
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/pikudalexa
+ExecStart=/usr/bin/node packages/monitor/dist/index.js
+Restart=always
+RestartSec=5
+EnvironmentFile=/opt/pikudalexa/.env
+
+[Install]
+WantedBy=multi-user.target
