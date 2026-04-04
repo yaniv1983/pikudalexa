@@ -20,7 +20,7 @@ const EVENT_GATEWAY: Record<string, string> = {
 export async function sendDoorbellPress(
   user: UserPreferences,
   _alert: ProcessedAlert,
-  region = 'EU',
+  region = 'NA',
 ): Promise<boolean> {
   const token = user.alexaAccessToken;
   if (!token) {
@@ -63,8 +63,8 @@ export async function sendDoorbellPress(
       body: JSON.stringify(event),
     });
 
-    if (res.status === 202 || res.status === 200) {
-      console.log('[Doorbell] Sent successfully');
+    if (res.status >= 200 && res.status < 300) {
+      console.log(`[Doorbell] Sent successfully (${res.status})`);
       return true;
     }
 
